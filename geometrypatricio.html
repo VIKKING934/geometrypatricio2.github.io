@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Juego Niveles Patricio</title>
+
+<style>
+    body {
+        margin: 0;
+        overflow: hidden;
+        font-family: Arial, sans-serif;
+        background: linear-gradient(270deg, #141e30, #243b55, #0f2027);
+        background-size: 600% 600%;
+        animation: fondoAnimado 12s ease infinite;
+    }
+
+    @keyframes fondoAnimado {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    canvas {
+        display: block;
+        margin: auto;
+        background: #111;
+        border: 4px solid white;
+        border-radius: 15px;
+        box-shadow: 0 0 20px cyan;
+    }
+
+    #ui {
+       #controles {
+    position: absolute;
+    bottom: 15px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+}
+
+.boton {
+    pointer-events: auto;
+    width: 70px;
+    height: 70px;
+    margin: 10px;
+    border-radius: 50%;
+    background: rgba(0,255,255,0.6);
+    color: black;
+    font-size: 28px;
+    border: none;
+    box-shadow: 0 0 15px cyan;
+}
+
+.boton:active {
+    transform: scale(0.9);
+}
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: white;
+        font-size: 18px;
+        background: rgba(0,0,0,0.6);
+        padding: 10px 18px;
+        border-radius: 12px;
+    }
+
+    /* Ocultar controles táctiles en computadora */
+@media (min-width: 768px) {
+    #controles {
+        display: none;
+    }
+}
+</style>
+</head>
+<body>
+
+<div id="ui">Nivel: 1 | Monedas: 0 | Vidas: 3</div>
+<canvas id="gameCanvas" width="950" height="320"></canvas>
+<div id="controles">
+
+<div>
+<button class="boton"
+ontouchstart="keys.a = true"
+ontouchend="keys.a = false">
+⬅️
+</button>
+</div>
+
+<div>
+<button class="boton"
+ontouchstart="saltar()">
+⬆️
+</button>
+</div>
+
+<div>
+<button class="boton"
+ontouchstart="keys.d = true"
+ontouchend="keys.d = false">
+➡️
+</button>
+</div>
+
+</div>
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const ui = document.getElementById("ui");
+
+// ===== IMAGEN DE FONDO PARA EL ÚLTIMO NIVEL =====
+// IMPORTANTE: guarda tu imagen con el nombre "fondo_nivel3.jpg"
+// en la misma carpeta que este archivo HTML
+let fondoNivel3 = new Image();
+fondoNivel3.src = "fondo_nivel3.jpg";
+
+// IMAGEN DEL DIAMANTE
+let diamanteImg = new Image();
+diamanteImg.src = "diamante.png";
+
+// IMAGEN DEL CUBITO
+let cubitoImg = new Image();
+cubitoImg.src = "cubito.png";
+
+// VARIABLES
+let coinsCollected = 0;
+let lives = 3;
+let currentLevel = 0;
+
+// JUGADOR (más rápido y salta más alto)
+let player = {
+    x: 50,
+    y: 250,
+    width: 40,
+    height: 40,
+    color: "cyan",
+    velocityY: 0,
+    gravity: 0.6,
+    jumpPower: -15,
+    onGround: true,
+    speedX: 6
+};
+
+// NIVELES
+let levels = [
+    {
+        name: "Patricio Capítulo 1",
+        obstacles: [
+            { x: 300, y: 260, width: 30, height: 40, move: false },
+            { x: 500, y: 240, width: 30, height: 60, move: true, dir: 1 }
+        ],
+        coins: [
+            { x: 200, y: 220, collected: false },
+            { x: 420, y: 200, collected: false }
+        ]
+    },
+    {
+        name: "Patricio el Cabro 2",
+        obstacles: [
+            { x: 350, y: 250, width: 30, height: 50, move: true, dir: 1 },
+            { x: 650, y: 260, width: 30, height: 40, move: false }
+        ],
+        coins: [
+            { x: 250, y: 210, collected: false },
+            { x: 600, y: 210, collected: false }
+        ]
+    },
+    {
+        name: "Patricio y Osito",
+        obstacles: [
+            { x: 400, y: 260, width: 30, height: 40, move: true, dir: 1 },
+            { x: 700, y: 240, width: 30, height: 60, move: true, dir: -1 }
+        ],
+        coins: [
+            { x: 300, y: 210, collected: false },
+            { x: 550, y: 210, collected: false }
+        ]
+    }
+];
+
+let keys = { a: false, d: false };
+
+function saltar() {
+    if (player.onGround) {
+        player.velocityY = player.jumpPower;
+        player.onGround = false;
+    }
+}
+// DIBUJAR FONDO ESPECIAL
+function drawBackground() {
+    if (currentLevel === 2) {
+        // Dibuja tu imagen como fondo en el último nivel
+        ctx.drawImage(fondoNivel3, 0, 0, canvas.width, canvas.height);
+    }
+}
+
+// DIBUJAR SUELO
+function drawGround() {
+    ctx.fillStyle = "lime";
+    ctx.fillRect(0, canvas.height - 10, canvas.width, 10);
+}
+
+// DIBUJAR JUGADOR
+
+function drawPlayer() {
+
+    if (cubitoImg.complete) {
+        ctx.drawImage(
+            cubitoImg,
+            player.x,
+            player.y,
+            player.width,
+            player.height
+        );
+    } else {
+        ctx.fillStyle = "cyan";
+        ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
+
+}
+
+// DIBUJAR OBSTÁCULOS
+function drawObstacles() {
+    let obsList = levels[currentLevel].obstacles;
+    ctx.fillStyle = "red";
+
+    obsList.forEach(obs => {
+        if (obs.move) {
+            obs.y += obs.dir * 1.8;
+            if (obs.y > 270 || obs.y < 200) {
+                obs.dir *= -1;
+            }
+        }
+        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+    });
+}
+
+// DIBUJAR MONEDAS
+function drawCoins() {
+
+    let coinList = levels[currentLevel].coins;
+
+    coinList.forEach(coin => {
+        if (!coin.collected) {
+
+            // Dibuja la imagen del diamante
+            ctx.drawImage(
+                diamanteImg,
+                coin.x - 15,
+                coin.y - 15,
+                30,
+                30
+            );
+
+        }
+    });
+}
+// MOVIMIENTO JUGADOR
+function updatePlayer() {
+    if (keys.d) player.x += player.speedX;
+    if (keys.a) player.x -= player.speedX;
+
+    player.velocityY += player.gravity;
+    player.y += player.velocityY;
+
+    if (player.y + player.height >= canvas.height) {
+        player.y = canvas.height - player.height;
+        player.velocityY = 0;
+        player.onGround = true;
+    }
+
+    // PASAR DE NIVEL
+    if (player.x > canvas.width - 20) {
+        nextLevel();
+    }
+}
+
+// COLISIONES
+function checkCollision() {
+    let obsList = levels[currentLevel].obstacles;
+
+    obsList.forEach(obs => {
+        if (
+            player.x < obs.x + obs.width &&
+            player.x + player.width > obs.x &&
+            player.y < obs.y + obs.height &&
+            player.y + player.height > obs.y
+        ) {
+            lives--;
+            resetPlayer();
+        }
+    });
+}
+
+// RECOGER MONEDAS
+function checkCoins() {
+    let coinList = levels[currentLevel].coins;
+
+    coinList.forEach(coin => {
+        if (!coin.collected) {
+            if (
+                player.x < coin.x + 10 &&
+                player.x + player.width > coin.x - 10 &&
+                player.y < coin.y + 10 &&
+                player.y + player.height > coin.y - 10
+            ) {
+                coin.collected = true;
+                coinsCollected++;
+            }
+        }
+    });
+}
+
+function resetPlayer() {
+    player.x = 50;
+    player.y = 250;
+
+    if (lives <= 0) {
+        alert("Game Over");
+        lives = 3;
+        coinsCollected = 0;
+        currentLevel = 0;
+    }
+}
+
+function nextLevel() {
+    currentLevel++;
+    player.x = 50;
+
+    if (currentLevel >= levels.length) {
+        alert("¡Ganaste el juego!");
+        currentLevel = 0;
+        coinsCollected = 0;
+        lives = 3;
+    }
+}
+
+function updateUI() {
+    ui.textContent =
+        "Nivel: " + (currentLevel + 1) +
+        " - " + levels[currentLevel].name +
+        " | Monedas: " + coinsCollected +
+        " | Vidas: " + lives;
+}
+
+function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawBackground();
+    updatePlayer();
+    checkCollision();
+    checkCoins();
+
+    drawGround();
+    drawPlayer();
+    drawObstacles();
+    drawCoins();
+    updateUI();
+
+    requestAnimationFrame(gameLoop);
+}
+
+// CONTROLES W A D
+   window.addEventListener("keydown", function(e) {
+
+    e.preventDefault();
+
+    if (e.key === "w" || e.key === "W") {
+        saltar();
+    }
+
+    if (e.key === "a" || e.key === "A") {
+        keys.a = true;
+    }
+
+    if (e.key === "d" || e.key === "D") {
+        keys.d = true;
+    }
+
+});
+
+// INICIAR JUEGO
+ gameLoop();
+</script>
+
+</body>
+</html>
