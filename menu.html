@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Menú Geometry Patricio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+    text-align: center;
+
+    background: linear-gradient(270deg, #141e30, #243b55, #0f2027);
+    background-size: 600% 600%;
+    animation: fondoAnimado 12s ease infinite;
+}
+
+@keyframes fondoAnimado {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+h1 {
+    color: white;
+    font-size: 55px;
+    margin-top: 120px;
+    text-shadow: 0 0 20px cyan;
+}
+
+button {
+    margin-top: 25px;
+    padding: 20px 45px;
+    font-size: 24px;
+    border: none;
+    border-radius: 15px;
+    background: cyan;
+    color: black;
+    cursor: pointer;
+    box-shadow: 0 0 15px cyan;
+    transition: 0.3s;
+    width: 80%;
+    max-width: 300px;
+}
+
+button:active {
+    transform: scale(0.95);
+}
+
+button:active {
+    transform: scale(0.95);
+}
+
+button:hover {
+    transform: scale(1.1);
+    background: white;
+}
+
+#creditos {
+    position: absolute;
+    bottom: 10px;
+    width: 100%;
+    color: white;
+    font-size: 16px;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>🎮 GEOMETRY PATRICIO</h1>
+
+<button onclick="iniciarJuego()">
+JUGAR
+</button>
+
+<br>
+
+<button onclick="mostrarControles()">
+CONTROLES
+</button>
+
+<div id="creditos">
+Creado por Max
+</div>
+
+<script>
+
+function iniciarJuego() {
+    window.location.href = "geometrypatricio.html";
+}
+
+function mostrarControles() {
+    alert(
+        "CONTROLES:\n\n" +
+        "W = Saltar\n" +
+        "A = Izquierda\n" +
+        "D = Derecha\n\n" +
+        "Recoge diamantes y evita los obstáculos."
+    );
+}
+
+</script>
+
+</body>
+</html>
